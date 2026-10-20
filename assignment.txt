@@ -1,0 +1,46 @@
+Place take-home exercise
+Hi Person,
+Thanks for taking the time to do this. The exercise below is meant to resemble the kind of work the team does day
+to day, and we expect you to use Claude (or any other tools you normally use) the way you would on the job. Since
+Claude can take care of much of the typing, we're especially interested in the decisions you make and how well the
+result holds up.
+Background
+Our product is a field sensor that reports its position to a mobile app while a crew works. The sensor streams data
+to the app continuously, and the app shows the crew what the sensor is doing. Things go wrong on both sides in
+the field, and the app has to notice.
+The task
+Build a small system with two parts, in any language (or combination of languages) you like:
+A server that plays the role of the sensor. It generates semi-realistic location data and streams it to the client
+using a simple messaging protocol of your own design. It should be able to produce valid data and also inject
+faults.
+A client that plays the role of the app. It receives the stream, shows the sensor's status, and detects faults.
+The interface can be anything: a web page, a desktop app, or a console.
+The client should also be able to send commands to the sensor, for example to change how often it reports or to
+start and stop a fault.
+What to send back
+Your code, in a zip file or a link to a repository, with instructions for running it.
+A short description of your protocol, written so that someone else could build a compatible client without
+reading your code.
+A short note on how well your client detects faults, and how you know.
+A short note on any assumptions you made.
+The transcript of your Claude (or alternative tool) conversation or conversations. We want to see how you
+worked with your AI tools, not to grade how your prompts are worded.
+If you have time
+These are optional. Pick any that interest you, or none.
+Show the sensor's position on a map.
+Record a session and replay it later through the client.
+Something you'd want if you were the one using it.
+Time
+Please spend no more than three hours of working time in total. It doesn't need to be done in one sitting, so feel free
+to stop and come back to it. If you run out of time, stop and include a few lines on what you would do next. An
+incomplete result with a clear account of where it stands is more useful to us than a complete one that took all
+weekend.
+Logistics
+Please send your submission to name@place.com by Friday, October 23. Feel free to email me at the
+same address with any questions or anything you'd like clarified, or if you run into a problem. You can reach me
+anytime, any day, and the best way to reach me is to text me at ###-###-####. Time spent waiting to hear back
+from me doesn't count toward the three hours.
+After we receive your submission, we'll set up a follow-up discussion where you can walk us through it and talk
+about how you'd extend it.
+Thanks, and good luck.
+Person
