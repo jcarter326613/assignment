@@ -106,7 +106,8 @@ configuration:
   "location": {
     "longitude": -81.69436,
     "latitude": 41.49932,
-    "altitude": 199
+    "altitude": 199,
+    "horizontalAccuracyMeters": 0.05
   }
 }
 \`\`\`
@@ -238,7 +239,7 @@ export function createSwaggerDocument(telemetryPort: number) {
                         },
                     },
                     responses: {
-                        "200": {
+                        "202": {
                             description:
                                 "Scenario is scheduled for activation in two seconds",
                             content: {
