@@ -6,6 +6,8 @@ import type {
 } from "@sensor/shared/protocol/telemetry"
 import type { FaultScenario } from "@sensor/shared/protocol/administration"
 import { SensorLocationMap } from "./map/SensorLocationMap"
+import { RecordingControls } from "./recording/RecordingControls"
+import { useLocationRecording } from "./recording/useLocationRecording"
 
 const telemetryUrl = import.meta.env.VITE_TELEMETRY_URL ?? "ws://localhost:8081"
 const administrationUrl =
@@ -51,6 +53,16 @@ export default function App() {
     const [healthStatus, setHealthStatus] = useState<HealthStatus>("normal")
     const [accuracyThresholdFeet, setAccuracyThresholdFeet] = useState(1)
     const [badPacketPercentage, setBadPacketPercentage] = useState(0)
+    const {
+        playbackLocation,
+        recordAcceptedLocation,
+        recording,
+        recordingState,
+        recordingWarning,
+        startRecording,
+        stopRecording,
+        playRecording,
+    } = useLocationRecording()
     const accuracyThresholdFeetRef = useRef(accuracyThresholdFeet)
     const latestLocationTimestampRef = useRef<number | undefined>(undefined)
     const lastAcceptedLocationRef = useRef<
@@ -69,6 +81,10 @@ export default function App() {
         startedAtMs: Date.now(),
         windows: [] as number[],
     })
+    const wasPlayingRef = useRef(false)
+
+    const isPlaying = recordingState === "playing"
+    const displayedLocation = isPlaying ? playbackLocation : latestLocation
 
     accuracyThresholdFeetRef.current = accuracyThresholdFeet
 
@@ -134,13 +150,33 @@ export default function App() {
     }
 
     useEffect(() => {
+        if (wasPlayingRef.current && !isPlaying) {
+            latestLocationTimestampRef.current = undefined
+            lastAcceptedLocationRef.current = undefined
+            teleportCandidateRef.current = undefined
+            setLatestLocationTimestamp(undefined)
+            setLatestLocation(undefined)
+        }
+
+        wasPlayingRef.current = isPlaying
+        healthWindowRef.current = {
+            goodPackets: 0,
+            startedAtMs: Date.now(),
+            windows: [],
+        }
+
+        if (isPlaying) {
+            setHealthStatus("normal")
+            return
+        }
+
         const staleTimer = setInterval(
             () => updateHealthStatus(Date.now()),
             100,
         )
 
         return () => clearInterval(staleTimer)
-    }, [])
+    }, [isPlaying])
 
     useEffect(() => {
         document.body.classList.toggle(
@@ -159,12 +195,34 @@ export default function App() {
     }, [healthStatus])
 
     useEffect(() => {
+        if (isPlaying) {
+            setConnectionState("disconnected")
+            return
+        }
+
+        let isActive = true
         const socket = new WebSocket(telemetryUrl)
 
-        socket.onopen = () => setConnectionState("connected")
-        socket.onclose = () => setConnectionState("disconnected")
-        socket.onerror = () => setConnectionState("disconnected")
+        socket.onopen = () => {
+            if (isActive) {
+                setConnectionState("connected")
+            }
+        }
+        socket.onclose = () => {
+            if (isActive) {
+                setConnectionState("disconnected")
+            }
+        }
+        socket.onerror = () => {
+            if (isActive) {
+                setConnectionState("disconnected")
+            }
+        }
         socket.onmessage = (event: MessageEvent<string>) => {
+            if (!isActive) {
+                return
+            }
+
             try {
                 const telemetryEvent = JSON.parse(event.data) as
                     | Partial<FaultTelemetryEvent>
@@ -260,6 +318,10 @@ export default function App() {
                     updateHealthStatus(Date.now())
                     setLatestLocationTimestamp(telemetryEvent.timestampMs)
                     setLatestLocation(location)
+                    recordAcceptedLocation({
+                        ...location,
+                        timestampMs: telemetryEvent.timestampMs,
+                    })
 
                     if (
                         location.horizontalAccuracyMeters >
@@ -289,8 +351,11 @@ export default function App() {
             setLastEvent(event.data)
         }
 
-        return () => socket.close()
-    }, [])
+        return () => {
+            isActive = false
+            socket.close()
+        }
+    }, [isPlaying, recordAcceptedLocation])
 
     async function scheduleFaultScenario(scenarioId: string) {
         await fetch(`${administrationUrl}/fault-scenario`, {
@@ -322,27 +387,54 @@ export default function App() {
                 <h2>Telemetry connection</h2>
                 <p data-testid="connection-state">{connectionState}</p>
                 <p data-testid="latest-location-timestamp">
-                    Latest location timestamp:{" "}
-                    {latestLocationTimestamp ?? "none"}
+                    {isPlaying
+                        ? "Playback active"
+                        : `Latest location timestamp: ${latestLocationTimestamp ?? "none"}`}
                 </p>
                 <p>{lastEvent}</p>
-                <p>Longitude: {latestLocation?.longitude ?? "waiting"}</p>
-                <p>Latitude: {latestLocation?.latitude ?? "waiting"}</p>
+                <p>Longitude: {displayedLocation?.longitude ?? "waiting"}</p>
+                <p>Latitude: {displayedLocation?.latitude ?? "waiting"}</p>
                 <p>
                     Horizontal accuracy:{" "}
-                    {latestLocation?.horizontalAccuracyMeters ?? "waiting"} m
+                    {displayedLocation?.horizontalAccuracyMeters ?? "waiting"} m
                 </p>
                 <div className="status-area" role="status">
-                    <p>Service status: {healthStatus}</p>
+                    <p>
+                        Service status: {isPlaying ? "playback" : healthStatus}
+                    </p>
                     <p>
                         {serverFault === undefined
                             ? ""
                             : `Server fault: ${serverFault}`}
                     </p>
-                    <p role="alert">{clientWarning ?? ""}</p>
+                    <p role="alert">
+                        {isPlaying
+                            ? "Playback active; live health monitoring is paused."
+                            : (clientWarning ?? "")}
+                    </p>
                 </div>
             </section>
-            <SensorLocationMap location={latestLocation} />
+            <SensorLocationMap
+                location={displayedLocation}
+                mode={isPlaying ? "playback" : "live"}
+            />
+            <RecordingControls
+                currentLocation={
+                    latestLocation === undefined ||
+                    latestLocationTimestamp === undefined
+                        ? undefined
+                        : {
+                              ...latestLocation,
+                              timestampMs: latestLocationTimestamp,
+                          }
+                }
+                hasRecording={recording !== undefined}
+                onPlayRecording={playRecording}
+                onStartRecording={startRecording}
+                onStopRecording={stopRecording}
+                recordingState={recordingState}
+                warning={recordingWarning}
+            />
             <section aria-label="Fault scenarios">
                 <h2>Fault scenarios</h2>
                 {faultScenarios.map((scenario) => (

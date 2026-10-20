@@ -36,6 +36,18 @@ visible OpenStreetMap contributor attribution. Deployments that switch tile
 providers must set both `VITE_MAP_TILE_URL` and `VITE_MAP_ATTRIBUTION` to the
 provider's required values.
 
+## Client recording
+
+The client can record accepted live locations and persist its latest completed
+recording in browser local storage. It compresses a steady path into movement
+segments containing a duration plus compact integer start and end locations.
+It starts a new segment only when the observed direction or speed departs from
+the current vector beyond the reported horizontal-accuracy tolerance.
+
+Playback reconstructs each segment at its original duration. Starting playback
+disconnects the live telemetry WebSocket and pauses live-health monitoring; the
+client reconnects automatically after the recording finishes.
+
 ## Server boundary
 
 The server intentionally has separate `telemetry` and `administration` modules

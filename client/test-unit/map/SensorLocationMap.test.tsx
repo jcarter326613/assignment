@@ -102,3 +102,11 @@ test("pauses following after a manual map movement and resumes on request", () =
         animate: true,
     })
 })
+
+test("labels replayed telemetry as a recorded location", () => {
+    render(<SensorLocationMap location={firstLocation} mode="playback" />)
+
+    expect(
+        screen.getByRole("heading", { name: "Recorded location" }),
+    ).toBeInTheDocument()
+})

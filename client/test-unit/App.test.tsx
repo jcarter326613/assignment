@@ -1,9 +1,21 @@
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import App from "../src/App"
 
 vi.mock("../src/map/SensorLocationMap", () => ({
-    SensorLocationMap: () => <div data-testid="sensor-location-map" />,
+    SensorLocationMap: ({
+        location,
+        mode,
+    }: {
+        location?: { longitude: number }
+        mode?: string
+    }) => (
+        <div
+            data-location={location?.longitude}
+            data-mode={mode}
+            data-testid="sensor-location-map"
+        />
+    ),
 }))
 
 class WebSocketMock {
@@ -23,9 +35,13 @@ class WebSocketMock {
 beforeEach(() => {
     WebSocketMock.instances = []
     vi.stubGlobal("WebSocket", WebSocketMock)
+    window.localStorage.clear()
 })
 
-afterEach(cleanup)
+afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+})
 
 test("shows the telemetry connection state", () => {
     render(<App />)
@@ -85,4 +101,52 @@ test("rejects location events older than the latest received timestamp", () => {
     expect(screen.getByTestId("latest-location-timestamp")).toHaveTextContent(
         "2000",
     )
+})
+
+test("disconnects live telemetry while replaying a recorded route", () => {
+    vi.useFakeTimers()
+    render(<App />)
+    const socket = WebSocketMock.instances[0]
+
+    act(() => {
+        socket.onmessage?.({
+            data: JSON.stringify({
+                type: "location",
+                timestampMs: 1_000,
+                location: {
+                    longitude: -81.69436,
+                    latitude: 41.49932,
+                    altitude: 199,
+                    horizontalAccuracyMeters: 0.05,
+                },
+            }),
+        } as MessageEvent<string>)
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Record location" }))
+
+    act(() => {
+        socket.onmessage?.({
+            data: JSON.stringify({
+                type: "location",
+                timestampMs: 2_000,
+                location: {
+                    longitude: -81.69426,
+                    latitude: 41.49932,
+                    altitude: 199,
+                    horizontalAccuracyMeters: 0.05,
+                },
+            }),
+        } as MessageEvent<string>)
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Stop recording" }))
+    fireEvent.click(screen.getByRole("button", { name: "Play recording" }))
+
+    expect(socket.close).toHaveBeenCalled()
+    expect(screen.getByTestId("sensor-location-map")).toHaveAttribute(
+        "data-mode",
+        "playback",
+    )
+
+    act(() => vi.advanceTimersByTime(1_000))
+    expect(WebSocketMock.instances).toHaveLength(2)
 })

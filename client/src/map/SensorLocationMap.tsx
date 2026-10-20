@@ -13,6 +13,7 @@ import "./map.css"
 
 type SensorLocationMapProps = {
     location: Location | undefined
+    mode?: "live" | "playback"
 }
 
 type LocationFollowerProps = {
@@ -46,12 +47,24 @@ function LocationFollower({
     return null
 }
 
-export function SensorLocationMap({ location }: SensorLocationMapProps) {
+export function SensorLocationMap({
+    location,
+    mode = "live",
+}: SensorLocationMapProps) {
     const [following, setFollowing] = useState(true)
 
+    useEffect(() => setFollowing(true), [mode])
+
     return (
-        <section aria-label="Live sensor map" className="sensor-map-panel">
-            <h2>Live location</h2>
+        <section
+            aria-label={
+                mode === "playback" ? "Recorded sensor map" : "Live sensor map"
+            }
+            className="sensor-map-panel"
+        >
+            <h2>
+                {mode === "playback" ? "Recorded location" : "Live location"}
+            </h2>
             <div className="sensor-map-shell">
                 <MapContainer
                     center={defaultMapCenter}

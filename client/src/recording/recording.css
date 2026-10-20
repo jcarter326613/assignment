@@ -1,0 +1,9 @@
+.recording-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.recording-status {
+    margin-bottom: 0;
+}
