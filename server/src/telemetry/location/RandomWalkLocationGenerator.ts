@@ -4,8 +4,8 @@ import type { LocationGenerator } from "./LocationGenerator"
 const EARTH_RADIUS_METERS = 6_378_137
 const METERS_PER_MILE = 1_609.344
 const SECONDS_PER_HOUR = 3_600
-const MIN_SPEED_MPH = 1
-const SPEED_RANGE_MPH = 3
+const MIN_SPEED_MPH = 20
+const SPEED_RANGE_MPH = 30
 const MIN_LEG_DURATION_MS = 3_000
 const LEG_DURATION_RANGE_MS = 7_000
 const COORDINATE_PRECISION = 10_000_000

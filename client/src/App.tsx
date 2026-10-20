@@ -5,6 +5,7 @@ import type {
     LocationTelemetryEvent,
 } from "@sensor/shared/protocol/telemetry"
 import type { FaultScenario } from "@sensor/shared/protocol/administration"
+import { SensorLocationMap } from "./map/SensorLocationMap"
 
 const telemetryUrl = import.meta.env.VITE_TELEMETRY_URL ?? "ws://localhost:8081"
 const administrationUrl =
@@ -12,7 +13,7 @@ const administrationUrl =
 
 type ConnectionState = "connecting" | "connected" | "disconnected"
 
-const MAX_WALKING_SPEED_METERS_PER_SECOND = 8.9408
+const MAX_DRIVING_SPEED_METERS_PER_SECOND = 44.704
 const STALE_LOCATION_THRESHOLD_MS = 1_000
 const TELEPORT_CONFIRMATION_COUNT = 3
 const PACKETS_PER_WINDOW = 5
@@ -199,7 +200,7 @@ export default function App() {
                                   ) / elapsedSeconds
                                 : Infinity
 
-                        if (speed > MAX_WALKING_SPEED_METERS_PER_SECOND) {
+                        if (speed > MAX_DRIVING_SPEED_METERS_PER_SECOND) {
                             const candidate = teleportCandidateRef.current
 
                             if (candidate === undefined) {
@@ -225,7 +226,7 @@ export default function App() {
 
                             if (
                                 candidateSpeed <=
-                                MAX_WALKING_SPEED_METERS_PER_SECOND
+                                MAX_DRIVING_SPEED_METERS_PER_SECOND
                             ) {
                                 candidate.followOnCount += 1
                                 candidate.location = location
@@ -341,6 +342,7 @@ export default function App() {
                     <p role="alert">{clientWarning ?? ""}</p>
                 </div>
             </section>
+            <SensorLocationMap location={latestLocation} />
             <section aria-label="Fault scenarios">
                 <h2>Fault scenarios</h2>
                 {faultScenarios.map((scenario) => (

@@ -24,6 +24,18 @@ Use `TELEMETRY_PORT` and `ADMINISTRATION_PORT` to override the server ports.
 Use `VITE_TELEMETRY_URL` and `VITE_ADMINISTRATION_URL` to point the client to
 different endpoints.
 
+## Client map
+
+The client renders the latest accepted location on a draggable, scroll-zoomable
+OpenStreetMap view. It follows live locations until the user drags or zooms the
+map, then exposes a **Resume following** control. The accuracy circle radius is
+the reported `horizontalAccuracyMeters` value.
+
+By default, tiles use `https://tile.openstreetmap.org/{z}/{x}/{y}.png` with
+visible OpenStreetMap contributor attribution. Deployments that switch tile
+providers must set both `VITE_MAP_TILE_URL` and `VITE_MAP_ATTRIBUTION` to the
+provider's required values.
+
 ## Server boundary
 
 The server intentionally has separate `telemetry` and `administration` modules
@@ -130,11 +142,12 @@ resolution also exceeds the required half-inch (1.27 cm) accuracy. JSON
 numbers omit insignificant trailing zeroes, but every generated value is
 quantized to this resolution.
 
-The random-walk generator selects a bearing, a 1-4 mph speed, and a 3-10 second
-walking leg. After each leg it chooses a new set of values. The reporting timer
-starts when the first WebSocket client connects and stops after the final client
-disconnects. At that point the server calls `LocationGenerator.powerDown()`;
-this pauses the simulation so it resumes from the same position on reconnect.
+The random-walk generator selects a bearing, a 20-50 mph driving speed, and a
+3-10 second driving leg. After each leg it chooses a new set of values. The
+reporting timer starts when the first WebSocket client connects and stops after
+the final client disconnects. At that point the server calls
+`LocationGenerator.powerDown()`; this pauses the simulation so it resumes from
+the same position on reconnect.
 
 `RandomWalkLocationGenerator` is injected into the production telemetry server.
 Tests use `FixedRouteLocationGenerator`, a repeatable route fixture implementing

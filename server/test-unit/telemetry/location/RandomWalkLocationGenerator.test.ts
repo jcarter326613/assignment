@@ -12,14 +12,14 @@ describe("RandomWalkLocationGenerator", () => {
         expect(generator.next(0)).toEqual(CLEVELAND_CITY_CENTER)
     })
 
-    test("walks at the configured random speed and direction", () => {
+    test("moves at the configured random driving speed and direction", () => {
         const generator = new RandomWalkLocationGenerator(() => 0)
         const start = generator.next(0)
         const afterOneSecond = generator.next(1_000)
 
         expect(
             calculateGreatCircleDistanceMeters(start, afterOneSecond),
-        ).toBeCloseTo(0.44704, 2)
+        ).toBeCloseTo(8.9408, 2)
         expect(afterOneSecond.longitude).toBe(start.longitude)
         expect(afterOneSecond.latitude).toBeGreaterThan(start.latitude)
     })

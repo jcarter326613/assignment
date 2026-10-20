@@ -2,6 +2,10 @@ import { act, cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import App from "../src/App"
 
+vi.mock("../src/map/SensorLocationMap", () => ({
+    SensorLocationMap: () => <div data-testid="sensor-location-map" />,
+}))
+
 class WebSocketMock {
     static instances: WebSocketMock[] = []
 
