@@ -1,2 +1,3 @@
 export * from "./coordinates"
-export * from "./protocol"
+export * from "./protocol/administration"
+export * from "./protocol/telemetry"

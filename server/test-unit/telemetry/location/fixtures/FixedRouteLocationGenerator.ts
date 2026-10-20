@@ -1,5 +1,5 @@
 import type { Location } from "@sensor/shared"
-import type { LocationGenerator } from "../../../src/location/LocationGenerator"
+import type { LocationGenerator } from "../../../../src/telemetry/location/LocationGenerator"
 
 export class FixedRouteLocationGenerator implements LocationGenerator {
     private currentIndex = 0

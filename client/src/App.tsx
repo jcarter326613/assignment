@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import type { LocationTelemetryEvent } from "@sensor/shared"
+import type { LocationTelemetryEvent } from "@sensor/shared/protocol/telemetry"
 
 const telemetryUrl = import.meta.env.VITE_TELEMETRY_URL ?? "ws://localhost:8081"
 const administrationUrl =

@@ -2,8 +2,8 @@
     "compilerOptions": {
         "target": "ES2022",
         "lib": ["ES2022"],
-        "module": "CommonJS",
-        "moduleResolution": "Node",
+        "module": "Node16",
+        "moduleResolution": "Node16",
         "esModuleInterop": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
@@ -11,5 +11,5 @@
         "noEmit": true,
         "types": ["node", "vitest/globals"]
     },
-    "include": ["src", "test-unit", "vitest.config.ts"]
+    "include": ["src", "test-unit"]
 }

@@ -9,9 +9,7 @@ describe("createSensorControlPlane", () => {
             receivedConfigurations.push(configuration.reportingIntervalMs)
         })
 
-        const configuration = controlPlane.updateConfiguration({
-            reportingIntervalMs: 500,
-        })
+        const configuration = controlPlane.setReportingInterval(500)
 
         expect(configuration).toEqual({
             reportingIntervalMs: 500,
@@ -23,8 +21,19 @@ describe("createSensorControlPlane", () => {
     test("rejects unsafe reporting intervals", () => {
         const controlPlane = createSensorControlPlane()
 
-        expect(() =>
-            controlPlane.updateConfiguration({ reportingIntervalMs: 99 }),
-        ).toThrow("reportingIntervalMs")
+        expect(() => controlPlane.setReportingInterval(99)).toThrow(
+            "reportingIntervalMs",
+        )
+    })
+
+    test("changes the fault mode independently of the reporting interval", () => {
+        const controlPlane = createSensorControlPlane()
+
+        const configuration = controlPlane.setFaultMode("stale-data")
+
+        expect(configuration).toEqual({
+            reportingIntervalMs: 1_000,
+            faultMode: "stale-data",
+        })
     })
 })

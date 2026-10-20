@@ -31,6 +31,12 @@ even though both run in one Node process. They communicate only through the
 `control` module, representing the control interface between the sensor and
 configuration CPU cores.
 
+Within each server half, `http` creates its listener, `routes` dispatches
+protocol paths, and `controllers` translate requests or connections into
+actions. Telemetry additionally has a `services` layer that owns socket,
+reporting-timer, and power-down state. Its location simulator is nested below
+`telemetry/location`; it is not shared with the administration half.
+
 ## Shared Contract
 
 The `shared` workspace is the internal `@sensor/shared` package imported by
@@ -42,8 +48,9 @@ protocol drift at compile time.
 The current shared exports are:
 
 - `Location` and `calculateGreatCircleDistanceMeters`
-- Sensor configuration and fault-mode types
-- Discriminated telemetry event types
+- `protocol/telemetry` for sensor configuration, fault modes, and telemetry
+  events
+- `protocol/administration` for focused administration request payloads
 
 Root start, test, and type-check commands build the shared package first.
 
@@ -51,12 +58,14 @@ The initial administration API exposes:
 
 - `GET /health`
 - `GET /configuration`
-- `PUT /configuration`
+- `PUT /reporting-interval`
+- `PUT /fault-mode`
 
-`PUT /configuration` accepts a JSON object containing one or both of
-`reportingIntervalMs` (an integer of at least 100) and `faultMode` (`none`,
-`invalid-location`, `offline`, or `stale-data`). Connected telemetry clients
-receive the updated configuration as a WebSocket JSON event.
+`PUT /reporting-interval` accepts `{ "reportingIntervalMs": 500 }`, where the
+interval is an integer of at least 100 milliseconds. `PUT /fault-mode` accepts
+`{ "faultMode": "stale-data" }`; valid modes are `none`, `invalid-location`,
+`offline`, and `stale-data`. Each command changes one setting and causes the
+server to broadcast the updated configuration as a telemetry event.
 
 ## Telemetry protocol
 

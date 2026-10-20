@@ -6,8 +6,8 @@ import { createSensorControlPlane } from "../../src/control/createSensorControlP
 import {
     createTelemetryServer,
     type TelemetryServer,
-} from "../../src/telemetry/createTelemetryServer"
-import { FixedRouteLocationGenerator } from "../location/fixtures/FixedRouteLocationGenerator"
+} from "../../src/telemetry/http/createTelemetryServer"
+import { FixedRouteLocationGenerator } from "./location/fixtures/FixedRouteLocationGenerator"
 
 const fixtureLocation: Location = {
     longitude: -81.69436,

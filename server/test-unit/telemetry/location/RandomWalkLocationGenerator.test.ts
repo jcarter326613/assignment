@@ -3,7 +3,7 @@ import { calculateGreatCircleDistanceMeters } from "@sensor/shared"
 import {
     CLEVELAND_CITY_CENTER,
     RandomWalkLocationGenerator,
-} from "../../src/location/RandomWalkLocationGenerator"
+} from "../../../src/telemetry/location/RandomWalkLocationGenerator"
 
 describe("RandomWalkLocationGenerator", () => {
     test("starts at Cleveland city center with centimetre altitude precision", () => {

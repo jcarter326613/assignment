@@ -1,11 +1,12 @@
 import type {
+    FaultMode,
     SensorConfiguration,
-    SensorConfigurationUpdate,
-} from "@sensor/shared"
+} from "@sensor/shared/protocol/telemetry"
 
 export interface SensorControlPlane {
     getConfiguration(): SensorConfiguration
-    updateConfiguration(update: SensorConfigurationUpdate): SensorConfiguration
+    setFaultMode(faultMode: FaultMode): SensorConfiguration
+    setReportingInterval(reportingIntervalMs: number): SensorConfiguration
     subscribe(
         listener: (configuration: SensorConfiguration) => void,
     ): () => void
@@ -22,19 +23,22 @@ export function createSensorControlPlane(): SensorControlPlane {
 
     return {
         getConfiguration: () => configuration,
-        updateConfiguration: (update) => {
-            const nextConfiguration = { ...configuration, ...update }
-
+        setFaultMode: (faultMode) => {
+            configuration = { ...configuration, faultMode }
+            listeners.forEach((listener) => listener(configuration))
+            return configuration
+        },
+        setReportingInterval: (reportingIntervalMs) => {
             if (
-                !Number.isInteger(nextConfiguration.reportingIntervalMs) ||
-                nextConfiguration.reportingIntervalMs < 100
+                !Number.isInteger(reportingIntervalMs) ||
+                reportingIntervalMs < 100
             ) {
                 throw new RangeError(
                     "reportingIntervalMs must be an integer of at least 100",
                 )
             }
 
-            configuration = nextConfiguration
+            configuration = { ...configuration, reportingIntervalMs }
             listeners.forEach((listener) => listener(configuration))
             return configuration
         },

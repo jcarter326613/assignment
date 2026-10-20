@@ -1,7 +1,7 @@
-import { createAdministrationServer } from "./administration/createAdministrationServer"
+import { createAdministrationServer } from "./administration/http/createAdministrationServer"
 import { createSensorControlPlane } from "./control/createSensorControlPlane"
-import { RandomWalkLocationGenerator } from "./location/RandomWalkLocationGenerator"
-import { createTelemetryServer } from "./telemetry/createTelemetryServer"
+import { createTelemetryServer } from "./telemetry/http/createTelemetryServer"
+import { RandomWalkLocationGenerator } from "./telemetry/location/RandomWalkLocationGenerator"
 
 function readPort(value: string | undefined, fallback: number) {
     const port = Number(value ?? fallback)

@@ -4,6 +4,20 @@
     "version": "0.1.0",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./protocol/administration": {
+            "types": "./dist/protocol/administration/index.d.ts",
+            "default": "./dist/protocol/administration/index.js"
+        },
+        "./protocol/telemetry": {
+            "types": "./dist/protocol/telemetry/index.d.ts",
+            "default": "./dist/protocol/telemetry/index.js"
+        }
+    },
     "files": [
         "dist"
     ],

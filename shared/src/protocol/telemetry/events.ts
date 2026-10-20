@@ -1,13 +1,5 @@
-import type { Location } from "./coordinates"
-
-export type FaultMode = "none" | "invalid-location" | "offline" | "stale-data"
-
-export interface SensorConfiguration {
-    reportingIntervalMs: number
-    faultMode: FaultMode
-}
-
-export type SensorConfigurationUpdate = Partial<SensorConfiguration>
+import type { Location } from "../../coordinates"
+import type { SensorConfiguration } from "./configuration"
 
 export interface ConfigurationTelemetryEvent {
     type: "configuration"
