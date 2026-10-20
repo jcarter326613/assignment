@@ -67,10 +67,10 @@ export default function App() {
                 </p>
                 <p>{lastEvent}</p>
             </section>
-            <section aria-label="Service endpoints">
-                <h2>Service endpoints</h2>
-                <p>Telemetry: {telemetryUrl}</p>
-                <p>Administration: {administrationUrl}</p>
+            <section aria-label="Administration">
+                <a href={`${administrationUrl}/swagger`}>
+                    Open administration Swagger
+                </a>
             </section>
         </main>
     )

@@ -37,6 +37,14 @@ test("shows the telemetry connection state", () => {
     )
 })
 
+test("links to the administration Swagger UI", () => {
+    render(<App />)
+
+    expect(
+        screen.getByRole("link", { name: "Open administration Swagger" }),
+    ).toHaveAttribute("href", "http://localhost:8080/swagger")
+})
+
 test("rejects location events older than the latest received timestamp", () => {
     render(<App />)
     const socket = WebSocketMock.instances[0]
