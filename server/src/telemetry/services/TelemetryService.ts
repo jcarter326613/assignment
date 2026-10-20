@@ -13,6 +13,9 @@ const FAULT_ACTIVATION_DELAY_MS = 2_000
 const POOR_ACCURACY_METERS = 10
 const TELEPORT_OFFSET_DEGREES = 0.01
 
+type TransientBadPacket =
+    "drop" | "hardware-error" | "location-jump" | "poor-accuracy"
+
 export interface TelemetryService {
     close(): void
     handleConnection(socket: WebSocket): void
@@ -51,6 +54,36 @@ export function createTelemetryService(
             return
         }
 
+        const isBadPacket =
+            Math.random() * 100 <
+            controlPlane.getPacketQuality().badPacketPercentage
+        const transientBadPacket: TransientBadPacket | undefined = isBadPacket
+            ? (
+                  [
+                      "drop",
+                      "hardware-error",
+                      "location-jump",
+                      "poor-accuracy",
+                  ] as const
+              )[Math.floor(Math.random() * 4)]
+            : undefined
+
+        if (transientBadPacket === "drop") {
+            return
+        }
+
+        if (transientBadPacket === "hardware-error") {
+            broadcast({
+                type: "fault",
+                details: {
+                    code: "hardware-error",
+                    description:
+                        "The sensor hardware missed one location report.",
+                },
+            })
+            return
+        }
+
         const timestampMs = Date.now()
         let location = locationGenerator.next(timestampMs)
 
@@ -77,6 +110,28 @@ export function createTelemetryService(
                 ...location,
                 latitude: location.latitude + TELEPORT_OFFSET_DEGREES,
             }
+        }
+
+        if (transientBadPacket === "location-jump") {
+            location = {
+                ...location,
+                latitude: location.latitude + TELEPORT_OFFSET_DEGREES,
+            }
+        }
+
+        if (transientBadPacket === "poor-accuracy") {
+            location = {
+                ...location,
+                horizontalAccuracyMeters: POOR_ACCURACY_METERS,
+            }
+            broadcast({
+                type: "fault",
+                details: {
+                    code: "poor-location-accuracy",
+                    description:
+                        "One location report has degraded horizontal accuracy.",
+                },
+            })
         }
 
         broadcast({ type: "location", timestampMs, location })

@@ -62,6 +62,8 @@ The initial administration API exposes:
 - `GET /fault-scenarios`
 - `PUT /fault-scenario`
 - `DELETE /fault-scenario`
+- `GET /packet-quality`
+- `PUT /bad-packet-percentage`
 - `GET /swagger.json`
 - `GET /docs/` and `GET /swagger/`
 
@@ -71,6 +73,10 @@ interval is an integer of at least 100 milliseconds. The default interval is
 activate a scenario with `PUT /fault-scenario` and `{ "scenarioId": "..." }`.
 The server activates it after two seconds. `DELETE /fault-scenario` cancels a
 pending scenario or resumes normal behavior.
+
+`PUT /bad-packet-percentage` accepts `{ "badPacketPercentage": 20 }`. For each
+selected report, the server randomly simulates a dropped packet, transient
+hardware failure, temporary location jump, or poor-accuracy location.
 
 Swagger UI is available at `http://localhost:8080/docs/` and
 `http://localhost:8080/swagger/`. Both views use the Swagger document at

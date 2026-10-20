@@ -2,10 +2,12 @@ import type { IncomingMessage, ServerResponse } from "node:http"
 import type { SensorControlPlane } from "../../control/createSensorControlPlane"
 import { getConfiguration } from "../controllers/getConfiguration"
 import { getHealth } from "../controllers/getHealth"
+import { getPacketQuality } from "../controllers/getPacketQuality"
 import { clearFaultScenario } from "../controllers/clearFaultScenario"
 import { getFaultScenarios } from "../controllers/getFaultScenarios"
 import { setFaultScenario } from "../controllers/setFaultScenario"
 import { setReportingInterval } from "../controllers/setReportingInterval"
+import { setBadPacketPercentage } from "../controllers/setBadPacketPercentage"
 import { createSwaggerHandlers } from "../documentation/createSwaggerHandlers"
 import { writeJson, writeOptions } from "../http/json"
 
@@ -50,6 +52,19 @@ export function createAdministrationRoutes(
 
         if (request.method === "GET" && url.pathname === "/fault-scenarios") {
             getFaultScenarios(response)
+            return
+        }
+
+        if (request.method === "GET" && url.pathname === "/packet-quality") {
+            getPacketQuality(response, controlPlane)
+            return
+        }
+
+        if (
+            request.method === "PUT" &&
+            url.pathname === "/bad-packet-percentage"
+        ) {
+            await setBadPacketPercentage(request, response, controlPlane)
             return
         }
 

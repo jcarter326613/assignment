@@ -4,6 +4,8 @@ import {
 } from "@sensor/shared/protocol/telemetry"
 import type {
     FaultScenario,
+    PacketQuality,
+    SetBadPacketPercentageRequest,
     SetFaultScenarioRequest,
     SetReportingIntervalRequest,
 } from "@sensor/shared/protocol/administration"
@@ -32,6 +34,24 @@ const faultScenarioProperties = {
 const setFaultScenarioProperties = {
     scenarioId: { type: "string", example: "hardware-error" },
 } satisfies Record<keyof SetFaultScenarioRequest, Schema>
+
+const packetQualityProperties = {
+    badPacketPercentage: {
+        type: "number",
+        minimum: 0,
+        maximum: 100,
+        example: 20,
+    },
+} satisfies Record<keyof PacketQuality, Schema>
+
+const setBadPacketPercentageProperties = {
+    badPacketPercentage: {
+        type: "number",
+        minimum: 0,
+        maximum: 100,
+        example: 20,
+    },
+} satisfies Record<keyof SetBadPacketPercentageRequest, Schema>
 
 const faultDetailsProperties = {
     code: {
@@ -248,6 +268,51 @@ export function createSwaggerDocument(telemetryPort: number) {
                     },
                 },
             },
+            "/packet-quality": {
+                get: {
+                    summary: "Read transient bad-packet simulation settings",
+                    responses: {
+                        "200": {
+                            description: "Current packet quality settings",
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        $ref: "#/components/schemas/PacketQuality",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            "/bad-packet-percentage": {
+                put: {
+                    summary:
+                        "Set the percentage of reports simulated as bad packets",
+                    requestBody: {
+                        required: true,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    $ref: "#/components/schemas/SetBadPacketPercentageRequest",
+                                },
+                            },
+                        },
+                    },
+                    responses: {
+                        "200": {
+                            description: "Updated packet quality settings",
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        $ref: "#/components/schemas/PacketQuality",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         },
         components: {
             schemas: {
@@ -282,6 +347,16 @@ export function createSwaggerDocument(telemetryPort: number) {
                     type: "object",
                     required: ["reportingIntervalMs"],
                     properties: setReportingIntervalProperties,
+                },
+                PacketQuality: {
+                    type: "object",
+                    required: ["badPacketPercentage"],
+                    properties: packetQualityProperties,
+                },
+                SetBadPacketPercentageRequest: {
+                    type: "object",
+                    required: ["badPacketPercentage"],
+                    properties: setBadPacketPercentageProperties,
                 },
             },
         },

@@ -15,6 +15,10 @@ type ConnectionState = "connecting" | "connected" | "disconnected"
 const MAX_WALKING_SPEED_METERS_PER_SECOND = 8.9408
 const STALE_LOCATION_THRESHOLD_MS = 1_000
 const TELEPORT_CONFIRMATION_COUNT = 3
+const PACKETS_PER_WINDOW = 5
+const HEALTH_WINDOW_DURATION_MS = 200 * PACKETS_PER_WINDOW * 1.1
+
+type HealthStatus = "normal" | "degraded" | "critical"
 
 function distanceMeters(first: Location, second: Location) {
     const latitudeDifference =
@@ -43,8 +47,9 @@ export default function App() {
     const [faultScenarios, setFaultScenarios] = useState<FaultScenario[]>([])
     const [serverFault, setServerFault] = useState<string>()
     const [clientWarning, setClientWarning] = useState<string>()
-    const [isLocationStale, setIsLocationStale] = useState(false)
+    const [healthStatus, setHealthStatus] = useState<HealthStatus>("normal")
     const [accuracyThresholdFeet, setAccuracyThresholdFeet] = useState(1)
+    const [badPacketPercentage, setBadPacketPercentage] = useState(0)
     const accuracyThresholdFeetRef = useRef(accuracyThresholdFeet)
     const latestLocationTimestampRef = useRef<number | undefined>(undefined)
     const lastAcceptedLocationRef = useRef<
@@ -58,6 +63,11 @@ export default function App() {
           }
         | undefined
     >(undefined)
+    const healthWindowRef = useRef({
+        goodPackets: 0,
+        startedAtMs: Date.now(),
+        windows: [] as number[],
+    })
 
     accuracyThresholdFeetRef.current = accuracyThresholdFeet
 
@@ -76,27 +86,76 @@ export default function App() {
     }, [])
 
     useEffect(() => {
-        const staleTimer = setInterval(() => {
-            const lastAcceptedLocation = lastAcceptedLocationRef.current
+        void fetch(`${administrationUrl}/packet-quality`)
+            .then(async (response) => {
+                if (response.ok) {
+                    const quality = (await response.json()) as {
+                        badPacketPercentage: number
+                    }
+                    setBadPacketPercentage(quality.badPacketPercentage)
+                }
+            })
+            .catch(() =>
+                setClientWarning("Packet quality control is unavailable."),
+            )
+    }, [])
 
-            if (
-                lastAcceptedLocation !== undefined &&
-                Date.now() - lastAcceptedLocation.timestampMs >
-                    STALE_LOCATION_THRESHOLD_MS
-            ) {
-                setClientWarning("Location data is stale.")
-                setIsLocationStale(true)
-            }
-        }, 200)
+    function updateHealthStatus(nowMs: number) {
+        const healthWindow = healthWindowRef.current
+
+        while (nowMs - healthWindow.startedAtMs >= HEALTH_WINDOW_DURATION_MS) {
+            healthWindow.windows.push(healthWindow.goodPackets)
+            healthWindow.windows = healthWindow.windows.slice(-3)
+            healthWindow.goodPackets = 0
+            healthWindow.startedAtMs += HEALTH_WINDOW_DURATION_MS
+        }
+
+        const lastAcceptedLocation = lastAcceptedLocationRef.current
+
+        if (
+            lastAcceptedLocation !== undefined &&
+            nowMs - lastAcceptedLocation.timestampMs >
+                STALE_LOCATION_THRESHOLD_MS
+        ) {
+            setClientWarning("Location data is stale.")
+            setHealthStatus("critical")
+            return
+        }
+
+        const unhealthyWindows = healthWindow.windows.filter(
+            (goodPackets) => goodPackets < PACKETS_PER_WINDOW,
+        ).length
+        setHealthStatus(
+            healthWindow.windows.length === 3 && unhealthyWindows >= 2
+                ? "degraded"
+                : "normal",
+        )
+    }
+
+    useEffect(() => {
+        const staleTimer = setInterval(
+            () => updateHealthStatus(Date.now()),
+            100,
+        )
 
         return () => clearInterval(staleTimer)
     }, [])
 
     useEffect(() => {
-        document.body.classList.toggle("critical-condition", isLocationStale)
+        document.body.classList.toggle(
+            "critical-condition",
+            healthStatus === "critical",
+        )
+        document.body.classList.toggle(
+            "degraded-condition",
+            healthStatus === "degraded",
+        )
 
-        return () => document.body.classList.remove("critical-condition")
-    }, [isLocationStale])
+        return () => {
+            document.body.classList.remove("critical-condition")
+            document.body.classList.remove("degraded-condition")
+        }
+    }, [healthStatus])
 
     useEffect(() => {
         const socket = new WebSocket(telemetryUrl)
@@ -196,9 +255,10 @@ export default function App() {
                         location,
                         timestampMs: telemetryEvent.timestampMs,
                     }
+                    healthWindowRef.current.goodPackets += 1
+                    updateHealthStatus(Date.now())
                     setLatestLocationTimestamp(telemetryEvent.timestampMs)
                     setLatestLocation(location)
-                    setIsLocationStale(false)
 
                     if (
                         location.horizontalAccuracyMeters >
@@ -245,6 +305,14 @@ export default function App() {
         setClientWarning(undefined)
     }
 
+    async function applyBadPacketPercentage() {
+        await fetch(`${administrationUrl}/bad-packet-percentage`, {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ badPacketPercentage }),
+        })
+    }
+
     return (
         <main>
             <p className="eyebrow">Field sensor monitor</p>
@@ -263,12 +331,15 @@ export default function App() {
                     Horizontal accuracy:{" "}
                     {latestLocation?.horizontalAccuracyMeters ?? "waiting"} m
                 </p>
-                {serverFault !== undefined && (
-                    <p>Server fault: {serverFault}</p>
-                )}
-                {clientWarning !== undefined && (
-                    <p role="alert">{clientWarning}</p>
-                )}
+                <div className="status-area" role="status">
+                    <p>Service status: {healthStatus}</p>
+                    <p>
+                        {serverFault === undefined
+                            ? ""
+                            : `Server fault: ${serverFault}`}
+                    </p>
+                    <p role="alert">{clientWarning ?? ""}</p>
+                </div>
             </section>
             <section aria-label="Fault scenarios">
                 <h2>Fault scenarios</h2>
@@ -297,6 +368,24 @@ export default function App() {
                         value={accuracyThresholdFeet}
                     />
                 </label>
+            </section>
+            <section aria-label="Packet quality">
+                <label>
+                    Bad packet percentage
+                    <input
+                        max="100"
+                        min="0"
+                        onChange={(event) =>
+                            setBadPacketPercentage(Number(event.target.value))
+                        }
+                        step="1"
+                        type="number"
+                        value={badPacketPercentage}
+                    />
+                </label>
+                <button onClick={() => void applyBadPacketPercentage()}>
+                    Apply packet quality
+                </button>
             </section>
             <section aria-label="Administration">
                 <a href={`${administrationUrl}/swagger`}>

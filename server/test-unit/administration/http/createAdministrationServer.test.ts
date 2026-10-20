@@ -58,6 +58,24 @@ describe("createAdministrationServer", () => {
 
         expect(faultResponse.status).toBe(202)
         expect(scheduledFault).toEqual({ scenarioId: "hardware-error" })
+
+        const packetQualityResponse = await fetch(`${url}/packet-quality`)
+        expect(await packetQualityResponse.json()).toEqual({
+            badPacketPercentage: 0,
+        })
+
+        const updatePacketQualityResponse = await fetch(
+            `${url}/bad-packet-percentage`,
+            {
+                method: "PUT",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ badPacketPercentage: 20 }),
+            },
+        )
+        expect(updatePacketQualityResponse.status).toBe(200)
+        expect(await updatePacketQualityResponse.json()).toEqual({
+            badPacketPercentage: 20,
+        })
     })
 
     test("does not expose the former combined configuration update route", async () => {
@@ -101,6 +119,7 @@ describe("createAdministrationServer", () => {
             "/configuration": expect.any(Object),
             "/fault-scenario": expect.any(Object),
             "/fault-scenarios": expect.any(Object),
+            "/packet-quality": expect.any(Object),
             "/reporting-interval": expect.any(Object),
         })
         expect(document.info.description).toContain("ws://localhost:9081")
