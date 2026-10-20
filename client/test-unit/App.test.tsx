@@ -1,0 +1,58 @@
+import { act, cleanup, render, screen } from "@testing-library/react"
+import { afterEach, beforeEach, expect, test, vi } from "vitest"
+import App from "../src/App"
+
+class WebSocketMock {
+    static instances: WebSocketMock[] = []
+
+    onclose: (() => void) | null = null
+    onerror: (() => void) | null = null
+    onmessage: ((event: MessageEvent<string>) => void) | null = null
+    onopen: (() => void) | null = null
+    close = vi.fn()
+
+    constructor() {
+        WebSocketMock.instances.push(this)
+    }
+}
+
+beforeEach(() => {
+    WebSocketMock.instances = []
+    vi.stubGlobal("WebSocket", WebSocketMock)
+})
+
+afterEach(cleanup)
+
+test("shows the telemetry connection state", () => {
+    render(<App />)
+
+    expect(screen.getByTestId("connection-state")).toHaveTextContent(
+        "connecting",
+    )
+
+    act(() => WebSocketMock.instances[0].onopen?.())
+
+    expect(screen.getByTestId("connection-state")).toHaveTextContent(
+        "connected",
+    )
+})
+
+test("rejects location events older than the latest received timestamp", () => {
+    render(<App />)
+    const socket = WebSocketMock.instances[0]
+
+    act(() => {
+        socket.onmessage?.({
+            data: JSON.stringify({ type: "location", timestampMs: 2_000 }),
+        } as MessageEvent<string>)
+    })
+    act(() => {
+        socket.onmessage?.({
+            data: JSON.stringify({ type: "location", timestampMs: 1_000 }),
+        } as MessageEvent<string>)
+    })
+
+    expect(screen.getByTestId("latest-location-timestamp")).toHaveTextContent(
+        "2000",
+    )
+})

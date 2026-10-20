@@ -1,0 +1,14 @@
+{
+    "name": "server",
+    "private": true,
+    "version": "0.1.0",
+    "scripts": {
+        "start": "tsx src/index.ts",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@sensor/shared": "file:../shared",
+        "ws": "^8.18.0"
+    }
+}
