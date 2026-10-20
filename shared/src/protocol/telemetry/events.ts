@@ -6,6 +6,16 @@ export interface ConfigurationTelemetryEvent {
     configuration: SensorConfiguration
 }
 
+export interface FaultDetails {
+    code: string
+    description: string
+}
+
+export interface FaultTelemetryEvent {
+    type: "fault"
+    details: FaultDetails
+}
+
 export interface LocationTelemetryEvent {
     type: "location"
     timestampMs: number
@@ -19,5 +29,6 @@ export interface TelemetryConnectedEvent {
 
 export type TelemetryEvent =
     | ConfigurationTelemetryEvent
+    | FaultTelemetryEvent
     | LocationTelemetryEvent
     | TelemetryConnectedEvent

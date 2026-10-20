@@ -1,6 +1,7 @@
 import { WebSocket } from "ws"
 import type {
     ConfigurationTelemetryEvent,
+    FaultTelemetryEvent,
     LocationTelemetryEvent,
     TelemetryConnectedEvent,
     TelemetryEvent,
@@ -26,7 +27,10 @@ export function createTelemetryService(
     let isGeneratorPoweredDown = false
 
     function broadcast(
-        event: ConfigurationTelemetryEvent | LocationTelemetryEvent,
+        event:
+            | ConfigurationTelemetryEvent
+            | FaultTelemetryEvent
+            | LocationTelemetryEvent,
     ) {
         connectedSockets.forEach((socket) => {
             if (socket.readyState === WebSocket.OPEN) {

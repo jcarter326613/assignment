@@ -97,6 +97,7 @@ describe("createAdministrationServer", () => {
             "/reporting-interval": expect.any(Object),
         })
         expect(document.info.description).toContain("ws://localhost:9081")
+        expect(document.info.description).toContain('"type": "fault"')
         expect(docsResponse.status).toBe(200)
         expect(await docsResponse.text()).toContain("SwaggerUIBundle")
         expect(docsSlashResponse.status).toBe(200)

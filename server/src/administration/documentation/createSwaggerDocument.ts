@@ -1,5 +1,6 @@
 import {
     faultModes,
+    type FaultDetails,
     type SensorConfiguration,
 } from "@sensor/shared/protocol/telemetry"
 import type {
@@ -33,6 +34,18 @@ const setReportingIntervalProperties = {
 const setFaultModeProperties = {
     faultMode: { $ref: "#/components/schemas/FaultMode" },
 } satisfies Record<keyof SetFaultModeRequest, Schema>
+
+const faultDetailsProperties = {
+    code: {
+        type: "string",
+        example: "poor-sky-visibility",
+    },
+    description: {
+        type: "string",
+        example:
+            "Satellite visibility is insufficient for a reliable position.",
+    },
+} satisfies Record<keyof FaultDetails, Schema>
 
 function telemetryDescription(telemetryPort: number) {
     return `## Realtime telemetry
@@ -82,9 +95,23 @@ configuration:
 }
 \`\`\`
 
+\`fault\` is an explicit server-reported fault:
+
+\`\`\`json
+{
+  "type": "fault",
+  "details": {
+    "code": "poor-sky-visibility",
+    "description": "Satellite visibility is insufficient for a reliable position."
+  }
+}
+\`\`\`
+
 \`timestampMs\` is a Unix epoch timestamp in milliseconds. Clients must retain
 only the newest location and silently discard a location packet whose timestamp
-is not newer than the latest accepted packet.`
+is not newer than the latest accepted packet. Fault packets supplement client
+checks; for example, a simulated power loss may stop telemetry entirely, which
+the client must detect from missing reports.`
 }
 
 export function createSwaggerDocument(telemetryPort: number) {
@@ -209,6 +236,11 @@ export function createSwaggerDocument(telemetryPort: number) {
                     },
                 },
                 FaultMode: faultModeSchema,
+                FaultDetails: {
+                    type: "object",
+                    required: ["code", "description"],
+                    properties: faultDetailsProperties,
+                },
                 SensorConfiguration: {
                     type: "object",
                     required: ["reportingIntervalMs", "faultMode"],

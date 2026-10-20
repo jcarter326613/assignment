@@ -93,6 +93,18 @@ replay prior locations.
 }
 ```
 
+The server can also report an observed fault:
+
+```json
+{
+    "type": "fault",
+    "details": {
+        "code": "poor-sky-visibility",
+        "description": "Satellite visibility is insufficient for a reliable position."
+    }
+}
+```
+
 - `longitude` and `latitude` are WGS84 decimal degrees, quantized to seven
   decimal places.
 - `altitude` is metres above mean sea level, quantized to two decimal places.
@@ -116,7 +128,9 @@ this pauses the simulation so it resumes from the same position on reconnect.
 `RandomWalkLocationGenerator` is injected into the production telemetry server.
 Tests use `FixedRouteLocationGenerator`, a repeatable route fixture implementing
 the same interface. The client retains only the location event with the newest
-timestamp and rejects an event whose timestamp is not newer.
+timestamp and rejects an event whose timestamp is not newer. Fault packets
+supplement client-side detection: for example, a power loss may stop telemetry
+entirely, requiring the client to detect missing reports without a fault packet.
 
 ## Development checks
 

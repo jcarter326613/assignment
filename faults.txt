@@ -1,0 +1,15 @@
+- Location too far from previous location.
+ - If we assume a person will typically not walk over 4 mph and we allow up to 20 mph, any movement over that would be considered a fault if it is a single data point
+ - A "teleportation" event will have occured if there have been X successive locations that obeyed the speed limit that were preceded by a jump that exceeded the speed limit. 
+ - Location reports that have a temporary jump will simply be discarded once they are determined not to be a teleportation event.
+- Hardware error
+ - We can simulate that the telemetry server just isn't able to generate a location because something bad happened with the hardware.  Could be a short or anythign else.
+- Accuracy too low.
+ - We need to show some sort of warning to the user that accuracy has gone below a critical level.  For now, don't worry about the UI of this too much as I want to
+    add maps and we can represent it better there.
+- Location data old
+ - This can trigger if the last valid location packet is older than some X.
+ - This is purely client side and needs to be indicated clearly with a red warning type indication.  If we assume the user of the client is using this for realtime navigation,
+    suddenly not getting updated location data is a critical failure.
+ - This error works hand in hand with the "location too far from previous location" issue because as we are waiting for new packets, if we don't get good valid ones in time,
+    this will trigger.
