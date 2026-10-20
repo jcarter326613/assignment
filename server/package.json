@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "@sensor/shared": "file:../shared",
+        "swagger-ui-dist": "^5.18.2",
         "ws": "^8.18.0"
     }
 }

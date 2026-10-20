@@ -60,12 +60,19 @@ The initial administration API exposes:
 - `GET /configuration`
 - `PUT /reporting-interval`
 - `PUT /fault-mode`
+- `GET /swagger.json`
+- `GET /docs/` and `GET /swagger/`
 
 `PUT /reporting-interval` accepts `{ "reportingIntervalMs": 500 }`, where the
 interval is an integer of at least 100 milliseconds. `PUT /fault-mode` accepts
 `{ "faultMode": "stale-data" }`; valid modes are `none`, `invalid-location`,
 `offline`, and `stale-data`. Each command changes one setting and causes the
 server to broadcast the updated configuration as a telemetry event.
+
+Swagger UI is available at `http://localhost:8080/docs/` and
+`http://localhost:8080/swagger/`. Both views use the Swagger document at
+`/swagger.json`, which includes the administration commands and instructions
+for connecting to and interpreting the realtime telemetry WebSocket.
 
 ## Telemetry protocol
 

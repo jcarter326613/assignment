@@ -12,7 +12,11 @@ afterEach(async () => {
 })
 
 function createTestServer() {
-    const server = createAdministrationServer(createSensorControlPlane(), 0)
+    const server = createAdministrationServer(
+        createSensorControlPlane(),
+        0,
+        9_081,
+    )
     servers.push(server)
     return server
 }
@@ -64,5 +68,46 @@ describe("createAdministrationServer", () => {
         )
 
         expect(response.status).toBe(404)
+    })
+
+    test("serves Swagger documentation and UI aliases", async () => {
+        const server = createTestServer()
+        await server.start()
+        const url = `http://localhost:${server.getPort()}`
+
+        const documentResponse = await fetch(`${url}/swagger.json`)
+        const document = (await documentResponse.json()) as {
+            info: { description: string }
+            openapi: string
+            paths: Record<string, unknown>
+        }
+        const docsResponse = await fetch(`${url}/docs`)
+        const docsSlashResponse = await fetch(`${url}/docs/`)
+        const swaggerResponse = await fetch(`${url}/swagger`)
+        const swaggerSlashResponse = await fetch(`${url}/swagger/`)
+        const stylesheetResponse = await fetch(
+            `${url}/documentation/swagger-ui.css`,
+        )
+
+        expect(documentResponse.status).toBe(200)
+        expect(document.openapi).toBe("3.1.0")
+        expect(document.paths).toMatchObject({
+            "/configuration": expect.any(Object),
+            "/fault-mode": expect.any(Object),
+            "/reporting-interval": expect.any(Object),
+        })
+        expect(document.info.description).toContain("ws://localhost:9081")
+        expect(docsResponse.status).toBe(200)
+        expect(await docsResponse.text()).toContain("SwaggerUIBundle")
+        expect(docsSlashResponse.status).toBe(200)
+        expect(await docsSlashResponse.text()).toContain("SwaggerUIBundle")
+        expect(swaggerResponse.status).toBe(200)
+        expect(await swaggerResponse.text()).toContain("SwaggerUIBundle")
+        expect(swaggerSlashResponse.status).toBe(200)
+        expect(await swaggerSlashResponse.text()).toContain("SwaggerUIBundle")
+        expect(stylesheetResponse.status).toBe(200)
+        expect(stylesheetResponse.headers.get("content-type")).toContain(
+            "text/css",
+        )
     })
 })

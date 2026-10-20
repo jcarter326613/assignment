@@ -4,13 +4,23 @@ import { getConfiguration } from "../controllers/getConfiguration"
 import { getHealth } from "../controllers/getHealth"
 import { setFaultMode } from "../controllers/setFaultMode"
 import { setReportingInterval } from "../controllers/setReportingInterval"
+import { createSwaggerHandlers } from "../documentation/createSwaggerHandlers"
 import { writeJson, writeOptions } from "../http/json"
 
-export function createAdministrationRoutes(controlPlane: SensorControlPlane) {
+export function createAdministrationRoutes(
+    controlPlane: SensorControlPlane,
+    telemetryPort: number,
+) {
+    const swaggerHandlers = createSwaggerHandlers(telemetryPort)
+
     return async (
         request: IncomingMessage,
         response: ServerResponse<IncomingMessage>,
     ) => {
+        if (await swaggerHandlers.handle(request, response)) {
+            return
+        }
+
         const url = new URL(request.url ?? "/", "http://localhost")
 
         if (request.method === "OPTIONS") {

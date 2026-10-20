@@ -25,6 +25,7 @@ const telemetryServer = createTelemetryServer(
 const administrationServer = createAdministrationServer(
     controlPlane,
     administrationPort,
+    telemetryPort,
 )
 
 async function start() {

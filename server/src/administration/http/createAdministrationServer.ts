@@ -21,8 +21,11 @@ function listen(server: Server, port: number) {
 export function createAdministrationServer(
     controlPlane: SensorControlPlane,
     port: number,
+    telemetryPort = 8081,
 ): AdministrationServer {
-    const server = createServer(createAdministrationRoutes(controlPlane))
+    const server = createServer(
+        createAdministrationRoutes(controlPlane, telemetryPort),
+    )
 
     return {
         start: () => listen(server, port),

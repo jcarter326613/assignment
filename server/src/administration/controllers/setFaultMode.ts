@@ -1,16 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http"
 import type { SetFaultModeRequest } from "@sensor/shared/protocol/administration"
-import type { FaultMode } from "@sensor/shared/protocol/telemetry"
+import { faultModes, type FaultMode } from "@sensor/shared/protocol/telemetry"
 import type { SensorControlPlane } from "../../control/createSensorControlPlane"
 import { readJson, writeJson } from "../http/json"
 
 function isFaultMode(value: unknown): value is FaultMode {
-    return (
-        value === "none" ||
-        value === "invalid-location" ||
-        value === "offline" ||
-        value === "stale-data"
-    )
+    return typeof value === "string" && faultModes.includes(value as FaultMode)
 }
 
 function isSetFaultModeRequest(value: unknown): value is SetFaultModeRequest {
