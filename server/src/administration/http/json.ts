@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http"
 
 const corsHeaders = {
     "access-control-allow-headers": "content-type",
-    "access-control-allow-methods": "GET,PUT,OPTIONS",
+    "access-control-allow-methods": "GET,PUT,DELETE,OPTIONS",
     "access-control-allow-origin": "http://localhost:5173",
 }
 

@@ -1,20 +1,14 @@
 import {
-    faultModes,
     type FaultDetails,
     type SensorConfiguration,
 } from "@sensor/shared/protocol/telemetry"
 import type {
-    SetFaultModeRequest,
+    FaultScenario,
+    SetFaultScenarioRequest,
     SetReportingIntervalRequest,
 } from "@sensor/shared/protocol/administration"
 
 type Schema = Record<string, unknown>
-
-const faultModeSchema = {
-    type: "string",
-    enum: faultModes,
-    example: "stale-data",
-}
 
 const reportingIntervalSchema = {
     type: "integer",
@@ -24,16 +18,20 @@ const reportingIntervalSchema = {
 
 const sensorConfigurationProperties = {
     reportingIntervalMs: reportingIntervalSchema,
-    faultMode: { $ref: "#/components/schemas/FaultMode" },
 } satisfies Record<keyof SensorConfiguration, Schema>
 
 const setReportingIntervalProperties = {
     reportingIntervalMs: reportingIntervalSchema,
 } satisfies Record<keyof SetReportingIntervalRequest, Schema>
 
-const setFaultModeProperties = {
-    faultMode: { $ref: "#/components/schemas/FaultMode" },
-} satisfies Record<keyof SetFaultModeRequest, Schema>
+const faultScenarioProperties = {
+    id: { type: "string", example: "hardware-error" },
+    label: { type: "string", example: "Simulate hardware error" },
+} satisfies Record<keyof FaultScenario, Schema>
+
+const setFaultScenarioProperties = {
+    scenarioId: { type: "string", example: "hardware-error" },
+} satisfies Record<keyof SetFaultScenarioRequest, Schema>
 
 const faultDetailsProperties = {
     code: {
@@ -62,8 +60,7 @@ receives only future reports; previous locations are not replayed.
 {
   "type": "telemetry-connected",
   "configuration": {
-    "reportingIntervalMs": 1000,
-    "faultMode": "none"
+    "reportingIntervalMs": 200
   }
 }
 \`\`\`
@@ -75,8 +72,7 @@ configuration:
 {
   "type": "configuration",
   "configuration": {
-    "reportingIntervalMs": 500,
-    "faultMode": "stale-data"
+    "reportingIntervalMs": 500
   }
 }
 \`\`\`
@@ -188,32 +184,51 @@ export function createSwaggerDocument(telemetryPort: number) {
                     },
                 },
             },
-            "/fault-mode": {
+            "/fault-scenarios": {
+                get: {
+                    summary: "List available server fault scenarios",
+                    responses: {
+                        "200": {
+                            description: "Server-owned fault scenario menu",
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "array",
+                                        items: {
+                                            $ref: "#/components/schemas/FaultScenario",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            "/fault-scenario": {
                 put: {
-                    summary: "Set the sensor fault mode",
+                    summary: "Schedule a server fault scenario",
                     requestBody: {
                         required: true,
                         content: {
                             "application/json": {
                                 schema: {
-                                    $ref: "#/components/schemas/SetFaultModeRequest",
+                                    $ref: "#/components/schemas/SetFaultScenarioRequest",
                                 },
                             },
                         },
                     },
                     responses: {
                         "200": {
-                            description: "Updated sensor configuration",
+                            description:
+                                "Scenario is scheduled for activation in two seconds",
                             content: {
                                 "application/json": {
-                                    schema: {
-                                        $ref: "#/components/schemas/SensorConfiguration",
-                                    },
+                                    schema: { type: "object" },
                                 },
                             },
                         },
                         "400": {
-                            description: "Invalid fault mode request",
+                            description: "Invalid fault scenario request",
                             content: {
                                 "application/json": {
                                     schema: {
@@ -221,6 +236,14 @@ export function createSwaggerDocument(telemetryPort: number) {
                                     },
                                 },
                             },
+                        },
+                    },
+                },
+                delete: {
+                    summary: "Resume normal sensor behavior",
+                    responses: {
+                        "200": {
+                            description: "Pending or active scenario cleared",
                         },
                     },
                 },
@@ -235,7 +258,6 @@ export function createSwaggerDocument(telemetryPort: number) {
                         error: { type: "string" },
                     },
                 },
-                FaultMode: faultModeSchema,
                 FaultDetails: {
                     type: "object",
                     required: ["code", "description"],
@@ -243,13 +265,18 @@ export function createSwaggerDocument(telemetryPort: number) {
                 },
                 SensorConfiguration: {
                     type: "object",
-                    required: ["reportingIntervalMs", "faultMode"],
+                    required: ["reportingIntervalMs"],
                     properties: sensorConfigurationProperties,
                 },
-                SetFaultModeRequest: {
+                FaultScenario: {
                     type: "object",
-                    required: ["faultMode"],
-                    properties: setFaultModeProperties,
+                    required: ["id", "label"],
+                    properties: faultScenarioProperties,
+                },
+                SetFaultScenarioRequest: {
+                    type: "object",
+                    required: ["scenarioId"],
+                    properties: setFaultScenarioProperties,
                 },
                 SetReportingIntervalRequest: {
                     type: "object",

@@ -7,11 +7,13 @@ describe("FixedRouteLocationGenerator", () => {
             longitude: -81.69436,
             latitude: 41.49932,
             altitude: 199,
+            horizontalAccuracyMeters: 0.05,
         }
         const finalLocation = {
             longitude: -81.69435,
             latitude: 41.49933,
             altitude: 199,
+            horizontalAccuracyMeters: 0.05,
         }
         const generator = new FixedRouteLocationGenerator([
             firstLocation,

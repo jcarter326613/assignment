@@ -37,21 +37,27 @@ describe("createAdministrationServer", () => {
         expect(intervalResponse.status).toBe(200)
         expect(intervalConfiguration).toEqual({
             reportingIntervalMs: 500,
-            faultMode: "none",
         })
 
-        const faultResponse = await fetch(`${url}/fault-mode`, {
+        const scenariosResponse = await fetch(`${url}/fault-scenarios`)
+        const scenarios = (await scenariosResponse.json()) as Array<{
+            id: string
+        }>
+
+        expect(scenariosResponse.status).toBe(200)
+        expect(scenarios).toContainEqual(
+            expect.objectContaining({ id: "hardware-error" }),
+        )
+
+        const faultResponse = await fetch(`${url}/fault-scenario`, {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ faultMode: "stale-data" }),
+            body: JSON.stringify({ scenarioId: "hardware-error" }),
         })
-        const faultConfiguration = await faultResponse.json()
+        const scheduledFault = await faultResponse.json()
 
-        expect(faultResponse.status).toBe(200)
-        expect(faultConfiguration).toEqual({
-            reportingIntervalMs: 500,
-            faultMode: "stale-data",
-        })
+        expect(faultResponse.status).toBe(202)
+        expect(scheduledFault).toEqual({ scenarioId: "hardware-error" })
     })
 
     test("does not expose the former combined configuration update route", async () => {
@@ -93,7 +99,8 @@ describe("createAdministrationServer", () => {
         expect(document.openapi).toBe("3.1.0")
         expect(document.paths).toMatchObject({
             "/configuration": expect.any(Object),
-            "/fault-mode": expect.any(Object),
+            "/fault-scenario": expect.any(Object),
+            "/fault-scenarios": expect.any(Object),
             "/reporting-interval": expect.any(Object),
         })
         expect(document.info.description).toContain("ws://localhost:9081")

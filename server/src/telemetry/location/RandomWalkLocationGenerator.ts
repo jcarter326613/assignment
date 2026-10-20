@@ -15,6 +15,7 @@ export const CLEVELAND_CITY_CENTER: Location = {
     longitude: -81.69436,
     latitude: 41.49932,
     altitude: 199,
+    horizontalAccuracyMeters: 0.05,
 }
 
 function round(value: number, precision: number) {
@@ -98,6 +99,8 @@ export class RandomWalkLocationGenerator implements LocationGenerator {
                 COORDINATE_PRECISION,
             ),
             altitude: round(CLEVELAND_CITY_CENTER.altitude, ALTITUDE_PRECISION),
+            horizontalAccuracyMeters:
+                CLEVELAND_CITY_CENTER.horizontalAccuracyMeters,
         }
     }
 

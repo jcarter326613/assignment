@@ -2,6 +2,7 @@ export interface Location {
     longitude: number
     latitude: number
     altitude: number
+    horizontalAccuracyMeters: number
 }
 
 const EARTH_RADIUS_METERS = 6_378_137

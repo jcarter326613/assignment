@@ -2,7 +2,9 @@ import type { IncomingMessage, ServerResponse } from "node:http"
 import type { SensorControlPlane } from "../../control/createSensorControlPlane"
 import { getConfiguration } from "../controllers/getConfiguration"
 import { getHealth } from "../controllers/getHealth"
-import { setFaultMode } from "../controllers/setFaultMode"
+import { clearFaultScenario } from "../controllers/clearFaultScenario"
+import { getFaultScenarios } from "../controllers/getFaultScenarios"
+import { setFaultScenario } from "../controllers/setFaultScenario"
 import { setReportingInterval } from "../controllers/setReportingInterval"
 import { createSwaggerHandlers } from "../documentation/createSwaggerHandlers"
 import { writeJson, writeOptions } from "../http/json"
@@ -46,8 +48,18 @@ export function createAdministrationRoutes(
             return
         }
 
-        if (request.method === "PUT" && url.pathname === "/fault-mode") {
-            await setFaultMode(request, response, controlPlane)
+        if (request.method === "GET" && url.pathname === "/fault-scenarios") {
+            getFaultScenarios(response)
+            return
+        }
+
+        if (request.method === "PUT" && url.pathname === "/fault-scenario") {
+            await setFaultScenario(request, response, controlPlane)
+            return
+        }
+
+        if (request.method === "DELETE" && url.pathname === "/fault-scenario") {
+            clearFaultScenario(response, controlPlane)
             return
         }
 

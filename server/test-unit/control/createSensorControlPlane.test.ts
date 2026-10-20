@@ -13,7 +13,6 @@ describe("createSensorControlPlane", () => {
 
         expect(configuration).toEqual({
             reportingIntervalMs: 500,
-            faultMode: "none",
         })
         expect(receivedConfigurations).toEqual([500])
     })
@@ -26,14 +25,16 @@ describe("createSensorControlPlane", () => {
         )
     })
 
-    test("changes the fault mode independently of the reporting interval", () => {
+    test("notifies telemetry when a fault scenario is selected", () => {
         const controlPlane = createSensorControlPlane()
-
-        const configuration = controlPlane.setFaultMode("stale-data")
-
-        expect(configuration).toEqual({
-            reportingIntervalMs: 1_000,
-            faultMode: "stale-data",
+        const receivedScenarioIds: Array<string | undefined> = []
+        controlPlane.subscribeFaultScenario((scenarioId) => {
+            receivedScenarioIds.push(scenarioId)
         })
+
+        controlPlane.setFaultScenarioId("hardware-error")
+
+        expect(controlPlane.getFaultScenarioId()).toBe("hardware-error")
+        expect(receivedScenarioIds).toEqual(["hardware-error"])
     })
 })

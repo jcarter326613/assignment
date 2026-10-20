@@ -1,7 +1,10 @@
-import type { FaultMode } from "../telemetry"
+export interface FaultScenario {
+    id: string
+    label: string
+}
 
-export interface SetFaultModeRequest {
-    faultMode: FaultMode
+export interface SetFaultScenarioRequest {
+    scenarioId: string
 }
 
 export interface SetReportingIntervalRequest {

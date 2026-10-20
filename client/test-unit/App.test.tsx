@@ -51,12 +51,30 @@ test("rejects location events older than the latest received timestamp", () => {
 
     act(() => {
         socket.onmessage?.({
-            data: JSON.stringify({ type: "location", timestampMs: 2_000 }),
+            data: JSON.stringify({
+                type: "location",
+                timestampMs: 2_000,
+                location: {
+                    longitude: -81.69436,
+                    latitude: 41.49932,
+                    altitude: 199,
+                    horizontalAccuracyMeters: 0.05,
+                },
+            }),
         } as MessageEvent<string>)
     })
     act(() => {
         socket.onmessage?.({
-            data: JSON.stringify({ type: "location", timestampMs: 1_000 }),
+            data: JSON.stringify({
+                type: "location",
+                timestampMs: 1_000,
+                location: {
+                    longitude: -81.69435,
+                    latitude: 41.49933,
+                    altitude: 199,
+                    horizontalAccuracyMeters: 0.05,
+                },
+            }),
         } as MessageEvent<string>)
     })
 

@@ -8,6 +8,18 @@ body {
     margin: 0;
 }
 
+body.critical-condition {
+    background: #b42318;
+}
+
+body.critical-condition main {
+    color: #ffffff;
+}
+
+body.critical-condition .eyebrow {
+    color: #ffe2df;
+}
+
 main {
     max-width: 720px;
     margin: 0 auto;

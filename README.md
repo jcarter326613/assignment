@@ -59,15 +59,18 @@ The initial administration API exposes:
 - `GET /health`
 - `GET /configuration`
 - `PUT /reporting-interval`
-- `PUT /fault-mode`
+- `GET /fault-scenarios`
+- `PUT /fault-scenario`
+- `DELETE /fault-scenario`
 - `GET /swagger.json`
 - `GET /docs/` and `GET /swagger/`
 
 `PUT /reporting-interval` accepts `{ "reportingIntervalMs": 500 }`, where the
-interval is an integer of at least 100 milliseconds. `PUT /fault-mode` accepts
-`{ "faultMode": "stale-data" }`; valid modes are `none`, `invalid-location`,
-`offline`, and `stale-data`. Each command changes one setting and causes the
-server to broadcast the updated configuration as a telemetry event.
+interval is an integer of at least 100 milliseconds. The default interval is
+`200 ms`. `GET /fault-scenarios` returns the server-owned fault menu; clients
+activate a scenario with `PUT /fault-scenario` and `{ "scenarioId": "..." }`.
+The server activates it after two seconds. `DELETE /fault-scenario` cancels a
+pending scenario or resumes normal behavior.
 
 Swagger UI is available at `http://localhost:8080/docs/` and
 `http://localhost:8080/swagger/`. Both views use the Swagger document at
@@ -88,7 +91,8 @@ replay prior locations.
     "location": {
         "longitude": -81.69436,
         "latitude": 41.49932,
-        "altitude": 199
+        "altitude": 199,
+        "horizontalAccuracyMeters": 0.05
     }
 }
 ```
@@ -108,6 +112,7 @@ The server can also report an observed fault:
 - `longitude` and `latitude` are WGS84 decimal degrees, quantized to seven
   decimal places.
 - `altitude` is metres above mean sea level, quantized to two decimal places.
+- `horizontalAccuracyMeters` is the estimated horizontal position accuracy.
 - `timestampMs` is the UTC Unix epoch timestamp in milliseconds when the server
   generated the report.
 - The location begins at Cleveland city center (`41.4993200`, `-81.6943600`)
